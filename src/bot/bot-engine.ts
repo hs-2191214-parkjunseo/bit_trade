@@ -29,26 +29,26 @@ export class BotEngine {
     this.market = market;
     this.coinSymbol = market.replace('KRW-', '');
 
-    // 3가지 전략 인스턴스 초기화
+    // 3가지 최적화 전략 인스턴스 초기화
     this.instances = [
       {
         id: 'strat_volatility',
-        strategy: new VolatilityBreakoutStrategy(0.5, 0.03),
-        exchange: new PaperExchange('변동성 돌파', initialSeedPerStrategy, this.coinSymbol),
+        strategy: new VolatilityBreakoutStrategy(0.4, 0.015, 0.018),
+        exchange: new PaperExchange('스마트 변동성 돌파', initialSeedPerStrategy, this.coinSymbol),
         lastSignalReason: '대기 중',
         lastEvaluatedAt: '',
       },
       {
         id: 'strat_goldencross',
-        strategy: new GoldenCrossRsiStrategy(7, 20, 14, 0.035),
-        exchange: new PaperExchange('골든크로스+RSI', initialSeedPerStrategy, this.coinSymbol),
+        strategy: new GoldenCrossRsiStrategy(14, 0.015, 0.018),
+        exchange: new PaperExchange('극단 과매도 V자 반등', initialSeedPerStrategy, this.coinSymbol),
         lastSignalReason: '대기 중',
         lastEvaluatedAt: '',
       },
       {
         id: 'strat_dca',
         strategy: new SmartDcaStrategy(),
-        exchange: new PaperExchange('스마트 분할매수', initialSeedPerStrategy, this.coinSymbol),
+        exchange: new PaperExchange('볼린저 하단 반등 DCA', initialSeedPerStrategy, this.coinSymbol),
         lastSignalReason: '대기 중',
         lastEvaluatedAt: '',
       },
@@ -144,14 +144,42 @@ export class BotEngine {
   }
 
   async changeMarket(newMarket: string) {
+    if (this.market === newMarket) return this.getStatus();
+
+    console.log(`[BotEngine] 타깃 코인 변경 요청: ${this.market} -> ${newMarket}`);
+
+    // 기존 보유 코인이 있다면 이전 마켓 가격으로 전량 현금화 청산 후 전환
+    for (const inst of this.instances) {
+      const coinBal = await inst.exchange.getBalance(this.coinSymbol);
+      if (coinBal.balance > 0.000001) {
+        const lastPrice = this.lastTicker ? this.lastTicker.trade_price : 0;
+        if (lastPrice > 0) {
+          try {
+            await inst.exchange.createOrder(
+              {
+                market: this.market,
+                side: 'ask',
+                ord_type: 'market',
+                volume: coinBal.balance,
+                currentPrice: lastPrice,
+              } as any,
+              `코인 전환에 따른 이전 코인(${this.coinSymbol}) 전량 청산`
+            );
+          } catch (e: any) {
+            console.error(`청산 실패: ${e.message}`);
+          }
+        }
+      }
+      // 새 코인 심볼 매핑 및 잔고 초기화
+      inst.exchange.coinCurrency = newMarket.replace('KRW-', '');
+      inst.exchange.coinBalance = 0;
+      inst.exchange.avgBuyPrice = 0;
+      inst.lastSignalReason = `코인 변경 (${newMarket}) 대기 중`;
+    }
+
     this.market = newMarket;
     this.coinSymbol = newMarket.replace('KRW-', '');
-    console.log(`[BotEngine] 타깃 코인 변경됨: ${this.market}`);
-
-    for (const inst of this.instances) {
-      inst.exchange.coinCurrency = this.coinSymbol;
-      inst.lastSignalReason = `코인 변경 (${this.coinSymbol}) - 초기화 대기`;
-    }
+    console.log(`[BotEngine] 새 코인(${this.market})으로 전환 완료`);
 
     await this.step();
     return this.getStatus();

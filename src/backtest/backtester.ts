@@ -9,14 +9,15 @@ export async function executeBacktest(market: string = 'KRW-BTC', days: number =
   const coinSymbol = market.replace('KRW-', '');
   const initialKrw = 1000000;
 
+  // 60일 일봉 및 대용량 60분봉 수집
   const dailyCandles = await upbitClient.getDailyCandles(market, Math.min(days, 200));
-  const minuteCandles = await upbitClient.getMinuteCandles(market, 60, 200);
+  const minuteCandles = await upbitClient.getMinuteCandlesMulti(market, 60, 1000);
 
-  // 1. 변동성 돌파
-  const volExchange = new PaperExchange('변동성 돌파', initialKrw, coinSymbol);
-  const volStrategy = new VolatilityBreakoutStrategy(0.5, 0.03);
+  // 1. 스마트 변동성 돌파 (일봉 60일 전수 시뮬레이션)
+  const volExchange = new PaperExchange('스마트 변동성 돌파', initialKrw, coinSymbol);
+  const volStrategy = new VolatilityBreakoutStrategy(0.35, 0.015, 0.015);
 
-  for (let i = 2; i < dailyCandles.length; i++) {
+  for (let i = 20; i < dailyCandles.length; i++) {
     const windowCandles = dailyCandles.slice(0, i + 1);
     const candle = windowCandles[windowCandles.length - 1];
     const coinBal = await volExchange.getBalance(coinSymbol);
@@ -31,28 +32,29 @@ export async function executeBacktest(market: string = 'KRW-BTC', days: number =
     };
 
     const signal = await volStrategy.evaluate(ctx);
-    if (signal.action === 'BUY' && signal.amountKrw) {
+    if (signal.action === 'BUY' && signal.amountKrw && krwBal >= 5000) {
+      const entryPrice = candle.trade_price;
       await volExchange.createOrder(
-        { market, side: 'bid', ord_type: 'price', price: signal.amountKrw, currentPrice: candle.trade_price } as any,
+        { market, side: 'bid', ord_type: 'price', price: signal.amountKrw, currentPrice: entryPrice } as any,
         signal.reason
       );
-    } else if (signal.action === 'SELL' && signal.volume) {
+    } else if (signal.action === 'SELL' && signal.volume && coinBal.balance > 0.000001) {
       await volExchange.createOrder(
-        { market, side: 'ask', ord_type: 'market', volume: signal.volume, currentPrice: candle.trade_price } as any,
+        { market, side: 'ask', ord_type: 'market', volume: coinBal.balance, currentPrice: candle.trade_price } as any,
         signal.reason
       );
     }
   }
 
-  // 2. 골든크로스 + RSI
-  const maExchange = new PaperExchange('골든크로스+RSI', initialKrw, coinSymbol);
-  const maStrategy = new GoldenCrossRsiStrategy(7, 20, 14, 0.035);
+  // 2. 극단 과매도 V자 반등 (60분봉 1000개 전수 시뮬레이션)
+  const rsiExchange = new PaperExchange('극단 과매도 V자 반등', initialKrw, coinSymbol);
+  const rsiStrategy = new GoldenCrossRsiStrategy(14, 0.015, 0.018);
 
   for (let i = 25; i < minuteCandles.length; i++) {
     const windowCandles = minuteCandles.slice(0, i + 1);
     const candle = windowCandles[windowCandles.length - 1];
-    const coinBal = await maExchange.getBalance(coinSymbol);
-    const krwBal = (await maExchange.getBalance('KRW')).balance;
+    const coinBal = await rsiExchange.getBalance(coinSymbol);
+    const krwBal = (await rsiExchange.getBalance('KRW')).balance;
 
     const ctx: StrategyContext = {
       market,
@@ -62,25 +64,25 @@ export async function executeBacktest(market: string = 'KRW-BTC', days: number =
       candles: windowCandles,
     };
 
-    const signal = await maStrategy.evaluate(ctx);
+    const signal = await rsiStrategy.evaluate(ctx);
     if (signal.action === 'BUY' && signal.amountKrw) {
-      await maExchange.createOrder(
+      await rsiExchange.createOrder(
         { market, side: 'bid', ord_type: 'price', price: signal.amountKrw, currentPrice: candle.trade_price } as any,
         signal.reason
       );
     } else if (signal.action === 'SELL' && signal.volume) {
-      await maExchange.createOrder(
+      await rsiExchange.createOrder(
         { market, side: 'ask', ord_type: 'market', volume: signal.volume, currentPrice: candle.trade_price } as any,
         signal.reason
       );
     }
   }
 
-  // 3. 스마트 분할매수
-  const dcaExchange = new PaperExchange('스마트 분할매수', initialKrw, coinSymbol);
+  // 3. 볼린저 하단 반등 2단계 DCA (60분봉 1000개 전수 시뮬레이션)
+  const dcaExchange = new PaperExchange('볼린저 하단 반등 DCA', initialKrw, coinSymbol);
   const dcaStrategy = new SmartDcaStrategy();
 
-  for (let i = 20; i < minuteCandles.length; i++) {
+  for (let i = 25; i < minuteCandles.length; i++) {
     const windowCandles = minuteCandles.slice(0, i + 1);
     const candle = windowCandles[windowCandles.length - 1];
     const coinBal = await dcaExchange.getBalance(coinSymbol);
@@ -111,7 +113,7 @@ export async function executeBacktest(market: string = 'KRW-BTC', days: number =
   const lastPrice = minuteCandles[minuteCandles.length - 1].trade_price;
   return [
     volExchange.getSummary(lastPrice),
-    maExchange.getSummary(lastPrice),
+    rsiExchange.getSummary(lastPrice),
     dcaExchange.getSummary(lastPrice),
   ];
 }

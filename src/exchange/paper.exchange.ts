@@ -55,9 +55,11 @@ export class PaperExchange implements IExchange {
         throw new Error(`[${this.name}] 잔액 부족 (보유: ${Math.floor(this.krw)} KRW, 주문: ${buyKrw} KRW)`);
       }
 
-      // 현재 시장가 계산용 (실제 체결 단가 추정)
-      // request에 currentPrice가 전달되지 않으면 price를 단위 가격으로 쓸 수 있도록 처리
-      const estimatedPrice = (request as any).currentPrice || buyKrw;
+      // 실제 체결 단가 엄격 검증 (단가 누락 시 오류 방어)
+      const estimatedPrice = (request as any).currentPrice;
+      if (!estimatedPrice || estimatedPrice <= 0) {
+        throw new Error(`[${this.name}] 체결 단가(currentPrice) 누락 또는 비정상: ${estimatedPrice}`);
+      }
       const fee = buyKrw * this.feeRate;
       const netBuyKrw = buyKrw - fee;
       const executedVolume = netBuyKrw / estimatedPrice;
@@ -102,7 +104,10 @@ export class PaperExchange implements IExchange {
         throw new Error(`[${this.name}] 코인 잔액 부족 (보유: ${this.coinBalance}, 주문: ${sellVolume})`);
       }
 
-      const estimatedPrice = (request as any).currentPrice || price || 0;
+      const estimatedPrice = (request as any).currentPrice || (ord_type === 'limit' ? price : 0);
+      if (!estimatedPrice || estimatedPrice <= 0) {
+        throw new Error(`[${this.name}] 매도 체결 단가(currentPrice) 누락 또는 비정상: ${estimatedPrice}`);
+      }
       const grossKrw = sellVolume * estimatedPrice;
       const fee = grossKrw * this.feeRate;
       const netKrw = grossKrw - fee;

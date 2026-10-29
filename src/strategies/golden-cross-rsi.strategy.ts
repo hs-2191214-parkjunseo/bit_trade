@@ -1,98 +1,90 @@
 import { IStrategy, StrategyContext, StrategySignal } from '../types/strategy.js';
-import { calculateSMA } from '../indicators/sma.js';
 import { calculateRSI } from '../indicators/rsi.js';
+import { calculateBollingerBands } from '../indicators/bollinger.js';
 
 export class GoldenCrossRsiStrategy implements IStrategy {
-  readonly name = '이평선 골든크로스 + RSI (MA Cross & RSI)';
-  readonly description = '단기(7선) / 장기(20선) 골든크로스 및 RSI 필터 매수, 데드크로스 또는 RSI 70 초과 시 매도';
+  readonly name = '극단 과매도 V자 반등 (Oversold Sniper)';
+  readonly description = 'RSI 32 이하 패닉셀 또는 볼린저 하단 이탈 후 양봉 반등 시 매수, +1.5% 또는 중심선 익절';
 
-  private shortPeriod: number;
-  private longPeriod: number;
   private rsiPeriod: number;
+  private takeProfitRate: number;
   private stopLossRate: number;
 
-  constructor(shortPeriod: number = 7, longPeriod: number = 20, rsiPeriod: number = 14, stopLossRate: number = 0.035) {
-    this.shortPeriod = shortPeriod;
-    this.longPeriod = longPeriod;
+  constructor(rsiPeriod: number = 14, takeProfitRate: number = 0.015, stopLossRate: number = 0.018) {
     this.rsiPeriod = rsiPeriod;
+    this.takeProfitRate = takeProfitRate;
     this.stopLossRate = stopLossRate;
   }
 
   async evaluate(context: StrategyContext): Promise<StrategySignal> {
     const { currentPrice, coinBalance, krwBalance, candles } = context;
 
-    if (candles.length < this.longPeriod + 5) {
-      return { action: 'HOLD', reason: `최소 ${this.longPeriod + 5}개 이상의 캔들 필요` };
+    if (candles.length < 25) {
+      return { action: 'HOLD', reason: '최소 25개 이상의 캔들 데이터 필요' };
     }
 
-    const closePrices = candles.map((c) => c.trade_price);
-    const shortSma = calculateSMA(closePrices, this.shortPeriod);
-    const longSma = calculateSMA(closePrices, this.longPeriod);
-    const rsi = calculateRSI(closePrices, this.rsiPeriod);
+    const closes = candles.map((c) => c.trade_price);
+    const rsi = calculateRSI(closes, this.rsiPeriod);
+    const bb = calculateBollingerBands(closes, 20, 2);
 
-    if (shortSma.length < 2 || longSma.length < 2 || rsi.length < 1) {
+    if (rsi.length < 2 || bb.lower.length < 2) {
       return { action: 'HOLD', reason: '지표 계산 데이터 불충분' };
     }
 
-    const currentShort = shortSma[shortSma.length - 1];
-    const prevShort = shortSma[shortSma.length - 2];
+    const prevCandle = candles[candles.length - 2];
+    const todayCandle = candles[candles.length - 1];
 
-    const currentLong = longSma[longSma.length - 1];
-    const prevLong = longSma[longSma.length - 2];
-
-    const currentRsi = rsi[rsi.length - 1];
+    const prevRsi = rsi[rsi.length - 2];
+    const curRsi = rsi[rsi.length - 1];
+    const prevLower = bb.lower[bb.lower.length - 2];
+    const curLower = bb.lower[bb.lower.length - 1];
+    const curMiddle = bb.middle[bb.middle.length - 1];
 
     const hasCoin = coinBalance && coinBalance.balance > 0.000001;
 
-    // 1. 손절 체크
+    // 1. 보유 중일 때: 익절 및 손절
     if (hasCoin && coinBalance.avg_buy_price > 0) {
-      const dropRate = (currentPrice - coinBalance.avg_buy_price) / coinBalance.avg_buy_price;
-      if (dropRate <= -this.stopLossRate) {
+      const profitRate = (currentPrice - coinBalance.avg_buy_price) / coinBalance.avg_buy_price;
+
+      // 볼린저 중심선 도달 시 또는 +1.5% 달성 시 익절
+      if (currentPrice >= curMiddle && profitRate >= 0.008) {
         return {
           action: 'SELL',
           volume: coinBalance.balance,
-          reason: `손절선 도달 (${(dropRate * 100).toFixed(2)}% <= -${(this.stopLossRate * 100).toFixed(2)}%)`,
+          reason: `볼린저 중심선 도달 익절 (+${(profitRate * 100).toFixed(2)}%)`,
+        };
+      }
+      if (profitRate >= this.takeProfitRate || curRsi >= 65) {
+        return {
+          action: 'SELL',
+          volume: coinBalance.balance,
+          reason: `목표 익절 (+${(profitRate * 100).toFixed(2)}% / RSI: ${curRsi.toFixed(1)})`,
+        };
+      }
+      if (profitRate <= -this.stopLossRate) {
+        return {
+          action: 'SELL',
+          volume: coinBalance.balance,
+          reason: `손절선 도달 (${(profitRate * 100).toFixed(2)}% <= -${(this.stopLossRate * 100).toFixed(1)}%)`,
         };
       }
     }
 
-    // 골든크로스 판정: 이전에는 단기 <= 장기, 현재는 단기 > 장기
-    const isGoldenCross = prevShort <= prevLong && currentShort > currentLong;
-    // 데드크로스 판정: 이전에는 단기 >= 장기, 현재는 단기 < 장기
-    const isDeadCross = prevShort >= prevLong && currentShort < currentLong;
+    // 2. 미보유 시 매수 조건: 전봉에서 극단 과매도(RSI <= 30 또는 볼린저 하단 확실한 이탈) 후 현재 양봉 반등
+    const wasPanicOversold = prevRsi <= 30 || prevCandle.low_price <= prevLower * 0.998;
+    const isBullishRebound = currentPrice > todayCandle.opening_price && curRsi > prevRsi && curRsi <= 45;
 
-    // 2. 매도 조건: 데드크로스 발생 또는 RSI 과매수(75 초과)
-    if (hasCoin) {
-      if (isDeadCross) {
-        return {
-          action: 'SELL',
-          volume: coinBalance.balance,
-          reason: `데드크로스 발생 (단기 ${Math.floor(currentShort)} < 장기 ${Math.floor(currentLong)})`,
-        };
-      }
-      if (currentRsi >= 75) {
-        return {
-          action: 'SELL',
-          volume: coinBalance.balance,
-          reason: `RSI 과매수권 도달 (${currentRsi.toFixed(1)} >= 75) 익절`,
-        };
-      }
-    }
-
-    // 3. 매수 조건: 골든크로스 + RSI 건전 구간(35 ~ 65)
-    if (!hasCoin && isGoldenCross && currentRsi >= 35 && currentRsi <= 65) {
-      if (krwBalance >= 5000) {
-        return {
-          action: 'BUY',
-          amountKrw: Math.floor(krwBalance * 0.98),
-          reason: `골든크로스 달성 (단기 ${Math.floor(currentShort)} > 장기 ${Math.floor(currentLong)}) & RSI: ${currentRsi.toFixed(1)}`,
-        };
-      }
+    if (!hasCoin && wasPanicOversold && isBullishRebound && krwBalance >= 5000) {
+      return {
+        action: 'BUY',
+        amountKrw: Math.floor(krwBalance * 0.98),
+        reason: `극단 과매도 투매(RSI ${prevRsi.toFixed(1)}) 후 양봉 V자 반등`,
+      };
     }
 
     return {
       action: 'HOLD',
-      reason: `단기MA: ${Math.floor(currentShort)} / 장기MA: ${Math.floor(currentLong)} / RSI: ${currentRsi.toFixed(1)}`,
+      reason: `RSI: ${curRsi.toFixed(1)} / 볼린저 하단: ${Math.floor(curLower).toLocaleString()} / 중심선: ${Math.floor(curMiddle).toLocaleString()}`,
     };
   }
 }

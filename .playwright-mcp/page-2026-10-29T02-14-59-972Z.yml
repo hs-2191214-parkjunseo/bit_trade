@@ -1,0 +1,164 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - heading "UPBIT BOT 가상매매 엔진 가동중" [level=1] [ref=e6]:
+        - generic [ref=e7]: UPBIT BOT
+        - generic [ref=e8]: 가상매매 엔진 가동중
+      - generic [ref=e9]:
+        - combobox [ref=e10] [cursor=pointer]:
+          - option "🪙 비트코인 (BTC)" [selected]
+          - option "⚡ 이더리움 (ETH)"
+          - option "🌊 리플 (XRP)"
+          - option "☀️ 솔라나 (SOL)"
+          - option "🐶 도지코인 (DOGE)"
+        - button "📊 60일 백테스트" [ref=e11] [cursor=pointer]
+        - button "초기화" [ref=e12] [cursor=pointer]
+        - generic [ref=e13]:
+          - generic [ref=e14]: BTC/KRW 현재가
+          - generic [ref=e15]: 107,023,000 원
+  - main [ref=e16]:
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - generic [ref=e19]: 총 운용 가상원금
+        - generic [ref=e20]: 3,000,000원
+        - generic [ref=e21]: 전략당 각 100만 원
+      - generic [ref=e22]:
+        - generic [ref=e23]: 합산 평가금액
+        - generic [ref=e24]: 2,998,141원
+        - generic [ref=e25]: "-0.06% (-1,859원)"
+      - generic [ref=e26]:
+        - generic [ref=e27]: 체결된 거래 건수
+        - generic [ref=e28]: 2회
+        - generic [ref=e29]: 업비트 수수료 0.05% 반영
+      - generic [ref=e30]:
+        - generic [ref=e31]: 최근 데이터 갱신
+        - generic [ref=e32]: 오전 11:14:59
+        - generic [ref=e33]: 5초 주기 자동 갱신
+    - generic [ref=e34]:
+      - generic [ref=e35]:
+        - heading "전략별 실시간 수익률 및 가상매매 시그널" [level=2] [ref=e36]
+        - generic [ref=e38]: ※ 하단 테스트 버튼으로 수동 가상 체결 즉시 확인 가능
+      - generic [ref=e39]:
+        - generic [ref=e40]:
+          - generic [ref=e41]:
+            - generic [ref=e42]:
+              - generic [ref=e43]: 전략 01
+              - generic [ref=e44]: KRW 보유대기
+            - heading "스마트 변동성 돌파 (Smart Breakout)" [level=3] [ref=e45]
+            - paragraph [ref=e46]: 20선 추세 필터 + K=0.4 돌파 매수 + 당일 목표(+1.8%) 익절 및 타이트 손절(-1.5%)
+            - generic [ref=e47]:
+              - generic [ref=e48]:
+                - generic [ref=e49]: "평가금액:"
+                - generic [ref=e50]: 1,000,000원
+              - generic [ref=e51]:
+                - generic [ref=e52]: "수익률 (손익):"
+                - generic [ref=e53]: +0.00% (0원)
+              - generic [ref=e54]:
+                - generic [ref=e55]: "보유 잔고:"
+                - generic [ref=e56]: 1,000,000원 / 0.000000 BTC
+              - generic [ref=e57]:
+                - generic [ref=e58]: "매수 평단가:"
+                - generic [ref=e59]: "-"
+              - generic [ref=e60]:
+                - generic [ref=e61]: "청산 승률:"
+                - generic [ref=e62]: 0.0% (0회 청산)
+          - generic [ref=e63]:
+            - generic [ref=e64]:
+              - generic [ref=e65]: 현재 시그널 상태
+              - generic [ref=e66]: "목표가: 109,982,000 / 현재가: 107,023,000 / 20MA: 109,946,450"
+            - generic [ref=e67]:
+              - button "+10만 원 테스트 매수" [ref=e68] [cursor=pointer]
+              - button "전량 테스트 매도" [ref=e69]
+        - generic [ref=e70]:
+          - generic [ref=e71]:
+            - generic [ref=e72]:
+              - generic [ref=e73]: 전략 02
+              - generic [ref=e74]: 코인 보유중
+            - heading "극단 과매도 V자 반등 (Oversold Sniper)" [level=3] [ref=e75]
+            - paragraph [ref=e76]: RSI 32 이하 패닉셀 또는 볼린저 하단 이탈 후 양봉 반등 시 매수, +1.5% 또는 중심선 익절
+            - generic [ref=e77]:
+              - generic [ref=e78]:
+                - generic [ref=e79]: "평가금액:"
+                - generic [ref=e80]: 998,769원
+              - generic [ref=e81]:
+                - generic [ref=e82]: "수익률 (손익):"
+                - generic [ref=e83]: "-0.12% (-1,231원)"
+              - generic [ref=e84]:
+                - generic [ref=e85]: "보유 잔고:"
+                - generic [ref=e86]: 20,000원 / 0.009145 BTC
+              - generic [ref=e87]:
+                - generic [ref=e88]: "매수 평단가:"
+                - generic [ref=e89]: 107,104,000원
+              - generic [ref=e90]:
+                - generic [ref=e91]: "청산 승률:"
+                - generic [ref=e92]: 0.0% (0회 청산)
+          - generic [ref=e93]:
+            - generic [ref=e94]:
+              - generic [ref=e95]: 현재 시그널 상태
+              - generic [ref=e96]: "RSI: 33.4 / 볼린저 하단: 107,360,038 / 중심선: 108,631,000"
+            - generic [ref=e97]:
+              - button "+10만 원 테스트 매수" [ref=e98] [cursor=pointer]
+              - button "전량 테스트 매도" [ref=e99] [cursor=pointer]
+        - generic [ref=e100]:
+          - generic [ref=e101]:
+            - generic [ref=e102]:
+              - generic [ref=e103]: 전략 03
+              - generic [ref=e104]: 코인 보유중
+            - heading "볼린저 하단 반등 DCA (Bollinger DCA)" [level=3] [ref=e105]
+            - paragraph [ref=e106]: 볼린저 하단선 이탈 후 양봉 전환 시 1차(50%), -1.8% 하락 시 2차(50%) 분할 매수 & +1.5% 익절
+            - generic [ref=e107]:
+              - generic [ref=e108]:
+                - generic [ref=e109]: "평가금액:"
+                - generic [ref=e110]: 999,372원
+              - generic [ref=e111]:
+                - generic [ref=e112]: "수익률 (손익):"
+                - generic [ref=e113]: "-0.06% (-628원)"
+              - generic [ref=e114]:
+                - generic [ref=e115]: "보유 잔고:"
+                - generic [ref=e116]: 500,000원 / 0.004666 BTC
+              - generic [ref=e117]:
+                - generic [ref=e118]: "매수 평단가:"
+                - generic [ref=e119]: 107,104,000원
+              - generic [ref=e120]:
+                - generic [ref=e121]: "청산 승률:"
+                - generic [ref=e122]: 0.0% (0회 청산)
+          - generic [ref=e123]:
+            - generic [ref=e124]:
+              - generic [ref=e125]: 현재 시그널 상태
+              - generic [ref=e126]: "현재 수익률: -0.08% (익절목표: +1.5% / 분할단계: 1단계)"
+            - generic [ref=e127]:
+              - button "+10만 원 테스트 매수" [ref=e128] [cursor=pointer]
+              - button "전량 테스트 매도" [ref=e129] [cursor=pointer]
+    - generic [ref=e130]:
+      - generic [ref=e131]:
+        - heading "최근 가상 체결 로그 2건" [level=3] [ref=e132]:
+          - generic [ref=e133]: 최근 가상 체결 로그
+          - generic [ref=e134]: 2건
+        - button "즉시 새로고침" [ref=e135] [cursor=pointer]
+      - table [ref=e137]:
+        - rowgroup [ref=e138]:
+          - row [ref=e139]:
+            - columnheader "시간" [ref=e140]
+            - columnheader "전략" [ref=e141]
+            - columnheader "구분" [ref=e142]
+            - columnheader "체결단가" [ref=e143]
+            - columnheader "수량 / 총액" [ref=e144]
+            - columnheader "손익률" [ref=e145]
+            - columnheader "사유" [ref=e146]
+        - rowgroup [ref=e147]:
+          - row [ref=e148]:
+            - cell "오전 11:14:52" [ref=e149]
+            - cell "볼린저 하단 반등 DCA" [ref=e150]
+            - cell "매수" [ref=e151]
+            - cell "107,104,000원" [ref=e152]
+            - cell "0.004666 BTC" [ref=e153]
+            - cell "-" [ref=e154]
+            - cell "볼린저 하단 이탈 후 양봉 전환, 1차 분할 매수 (50%)" [ref=e155]
+          - row [ref=e156]:
+            - cell "오전 11:14:52" [ref=e157]
+            - cell "극단 과매도 V자 반등" [ref=e158]
+            - cell "매수" [ref=e159]
+            - cell "107,104,000원" [ref=e160]
+            - cell "0.009145 BTC" [ref=e161]
+            - cell "-" [ref=e162]
+            - cell "극단 과매도 투매(RSI 34.1) 후 양봉 V자 반등" [ref=e163]
