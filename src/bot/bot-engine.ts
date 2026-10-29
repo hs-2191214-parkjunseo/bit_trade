@@ -143,6 +143,20 @@ export class BotEngine {
     }
   }
 
+  async changeMarket(newMarket: string) {
+    this.market = newMarket;
+    this.coinSymbol = newMarket.replace('KRW-', '');
+    console.log(`[BotEngine] 타깃 코인 변경됨: ${this.market}`);
+
+    for (const inst of this.instances) {
+      inst.exchange.coinCurrency = this.coinSymbol;
+      inst.lastSignalReason = `코인 변경 (${this.coinSymbol}) - 초기화 대기`;
+    }
+
+    await this.step();
+    return this.getStatus();
+  }
+
   async manualTrade(strategyId: string, side: 'bid' | 'ask', amountOrVolume: number) {
     const inst = this.instances.find((i) => i.id === strategyId);
     if (!inst) throw new Error(`전략 ID를 찾을 수 없음: ${strategyId}`);

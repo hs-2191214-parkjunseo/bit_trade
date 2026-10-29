@@ -29,6 +29,18 @@ export function createWebServer(botEngine: BotEngine) {
     }
   });
 
+  // 타깃 코인 변경 API
+  app.post('/api/market', async (req, res) => {
+    try {
+      const { market } = req.body;
+      if (!market) throw new Error('market 파라미터가 필요합니다 (예: KRW-ETH)');
+      const result = await botEngine.changeMarket(market);
+      res.json({ success: true, market: botEngine.market, result });
+    } catch (err: any) {
+      res.status(400).json({ success: false, error: err.message });
+    }
+  });
+
   // 백테스트 실행 API
   app.get('/api/backtest', async (_req, res) => {
     try {

@@ -23,14 +23,23 @@
         </h1>
       </div>
       <div class="flex items-center gap-2">
-        <button onclick="runBacktestModal()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 rounded-lg transition shadow">
-          📊 과거 60일 백테스트 검증
+        <!-- 코인 선택 드롭다운 -->
+        <select id="market-select" onchange="onMarketChange(this.value)" class="text-xs bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 font-bold focus:outline-none focus:border-indigo-500 cursor-pointer">
+          <option value="KRW-BTC" selected>🪙 비트코인 (BTC)</option>
+          <option value="KRW-ETH">⚡ 이더리움 (ETH)</option>
+          <option value="KRW-XRP">🌊 리플 (XRP)</option>
+          <option value="KRW-SOL">☀️ 솔라나 (SOL)</option>
+          <option value="KRW-DOGE">🐶 도지코인 (DOGE)</option>
+        </select>
+
+        <button onclick="runBacktestModal()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 rounded-lg transition shadow cursor-pointer">
+          📊 60일 백테스트
         </button>
-        <button onclick="resetAllAccounts()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+        <button onclick="resetAllAccounts()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition cursor-pointer">
           초기화
         </button>
         <div class="text-right pl-3 border-l border-slate-800">
-          <div class="text-[11px] text-slate-400">비트코인(BTC/KRW) 현재가</div>
+          <div id="coin-label" class="text-[11px] text-slate-400">BTC 현재가</div>
           <div id="current-price" class="text-sm md:text-base font-mono font-bold text-emerald-400">조회중...</div>
         </div>
       </div>
@@ -136,6 +145,24 @@
       }
     }
 
+    async function onMarketChange(newMarket) {
+      try {
+        const res = await fetch('/api/market', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ market: newMarket })
+        });
+        const data = await res.json();
+        if (data.success) {
+          fetchStatus();
+        } else {
+          alert('마켓 변경 실패: ' + data.error);
+        }
+      } catch (err) {
+        alert('요청 에러: ' + err.message);
+      }
+    }
+
     async function triggerManualBuy(strategyId) {
       try {
         const res = await fetch('/api/trade/manual', {
@@ -238,7 +265,13 @@
     }
 
     function renderDashboard(data) {
+      const coinSymbol = data.market.replace('KRW-', '');
+      document.getElementById('coin-label').innerText = `${coinSymbol}/KRW 현재가`;
       document.getElementById('current-price').innerText = `${Number(data.currentPrice).toLocaleString()} 원`;
+      const selectEl = document.getElementById('market-select');
+      if (selectEl && selectEl.value !== data.market) {
+        selectEl.value = data.market;
+      }
       const timeStr = new Date(data.updatedAt).toLocaleTimeString('ko-KR');
       document.getElementById('last-updated').innerText = timeStr;
 
@@ -295,7 +328,7 @@
                 </div>
                 <div class="flex justify-between">
                   <span class="text-slate-400">보유 잔고:</span>
-                  <span class="text-slate-200">${Math.round(s.summary.currentKrw).toLocaleString()}원 / ${s.summary.coinBalance.toFixed(6)} BTC</span>
+                  <span class="text-slate-200">${Math.round(s.summary.currentKrw).toLocaleString()}원 / ${s.summary.coinBalance.toFixed(6)} ${coinSymbol}</span>
                 </div>
                 <div class="flex justify-between">
                   <span class="text-slate-400">매수 평단가:</span>
@@ -350,7 +383,7 @@
               <td class="py-2.5 text-slate-300 font-medium">${t.strategyName}</td>
               <td class="py-2.5">${sideBadge}</td>
               <td class="py-2.5 text-right text-slate-200">${Math.round(t.price).toLocaleString()}원</td>
-              <td class="py-2.5 text-right text-slate-300">${t.volume.toFixed(6)} BTC</td>
+              <td class="py-2.5 text-right text-slate-300">${t.volume.toFixed(6)} ${t.market.replace('KRW-', '')}</td>
               <td class="py-2.5 text-right">${pnlText}</td>
               <td class="py-2.5 pl-3 text-slate-400 text-xs font-sans truncate max-w-[200px]">${t.reason || '-'}</td>
             </tr>
