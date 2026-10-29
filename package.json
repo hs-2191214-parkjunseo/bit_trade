@@ -1,0 +1,41 @@
+{
+  "name": "ord",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "backtest": "tsx src/backtest/runner.ts",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hs-2191214-parkjunseo/ord.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hs-2191214-parkjunseo/ord/issues"
+  },
+  "homepage": "https://github.com/hs-2191214-parkjunseo/ord#readme",
+  "dependencies": {
+    "@types/express": "^5.0.6",
+    "axios": "^1.21.0",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "uuid": "^14.0.3",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^26.6.5",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.18.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

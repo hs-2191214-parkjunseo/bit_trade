@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: upbit-trading-bot
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: TARGET_MARKET
+        value: KRW-BTC
+      - key: INITIAL_SEED
+        value: 1000000
