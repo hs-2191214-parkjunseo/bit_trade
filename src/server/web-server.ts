@@ -2,7 +2,8 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { BotEngine } from '../bot/bot-engine.js';
-import { executeBacktest } from '../backtest/backtester.js';
+import { executeBacktest, executeAllMarketsBacktest } from '../backtest/backtester.js';
+import { SUPPORTED_MARKETS } from '../config/markets.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,6 +18,21 @@ export function createWebServer(botEngine: BotEngine) {
   // 헬스체크 엔드포인트 (클라우드 배포용)
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'ok', uptime: process.uptime() });
+  });
+
+  // 지원 마켓 목록 API
+  app.get('/api/markets', (_req, res) => {
+    res.json({ success: true, markets: SUPPORTED_MARKETS });
+  });
+
+  // 전 종목 일괄 랭킹 백테스트 API
+  app.get('/api/backtest/ranking', async (_req, res) => {
+    try {
+      const rankings = await executeAllMarketsBacktest(10); // 상위 10개 종목 랭킹
+      res.json({ success: true, rankings });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
   });
 
   // 상태 조회 API
@@ -42,10 +58,11 @@ export function createWebServer(botEngine: BotEngine) {
   });
 
   // 백테스트 실행 API
-  app.get('/api/backtest', async (_req, res) => {
+  app.get('/api/backtest', async (req, res) => {
     try {
-      const results = await executeBacktest(botEngine.market, 60);
-      res.json({ success: true, results });
+      const targetMarket = (req.query.market as string) || botEngine.market;
+      const results = await executeBacktest(targetMarket, 60);
+      res.json({ success: true, market: targetMarket, results });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>코인 자동매매 봇 대시보드 (업비트 모의투자)</title>
+  <title>코인 자동매매 봇 대시보드 (업비트 멀티전략 퀀트)</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -18,28 +18,46 @@
       <div class="flex items-center gap-3">
         <div class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></div>
         <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
-          <span>UPBIT BOT</span>
-          <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full font-mono">가상매매 엔진 가동중</span>
+          <span>UPBIT QUANT BOT</span>
+          <span class="text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full font-mono">실시간 퀀트 가동중</span>
         </h1>
       </div>
       <div class="flex items-center gap-2">
-        <!-- 코인 선택 드롭다운 -->
+        <!-- 15개 코인 선택 드롭다운 -->
         <select id="market-select" onchange="onMarketChange(this.value)" class="text-xs bg-slate-800 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 font-bold focus:outline-none focus:border-indigo-500 cursor-pointer">
-          <option value="KRW-BTC" selected>🪙 비트코인 (BTC)</option>
-          <option value="KRW-ETH">⚡ 이더리움 (ETH)</option>
-          <option value="KRW-XRP">🌊 리플 (XRP)</option>
-          <option value="KRW-SOL">☀️ 솔라나 (SOL)</option>
-          <option value="KRW-DOGE">🐶 도지코인 (DOGE)</option>
+          <optgroup label="🔥 메이저 (Top)">
+            <option value="KRW-BTC" selected>🪙 비트코인 (BTC)</option>
+            <option value="KRW-ETH">⚡ 이더리움 (ETH)</option>
+            <option value="KRW-XRP">🌊 리플 (XRP)</option>
+          </optgroup>
+          <optgroup label="🚀 레이어 1 메이저">
+            <option value="KRW-SOL">☀️ 솔라나 (SOL)</option>
+            <option value="KRW-SUI">💧 수이 (SUI)</option>
+            <option value="KRW-SEI">⚡ 세이 (SEI)</option>
+            <option value="KRW-ADA">🔷 에이다 (ADA)</option>
+            <option value="KRW-AVAX">🔺 아발란체 (AVAX)</option>
+            <option value="KRW-NEAR">🌈 니어프로토콜 (NEAR)</option>
+            <option value="KRW-APT">💎 앱토스 (APT)</option>
+            <option value="KRW-DOT">🟣 폴카닷 (DOT)</option>
+            <option value="KRW-ETC">🌿 이더리움클래식 (ETC)</option>
+          </optgroup>
+          <optgroup label="🔗 디파이 / 인프라">
+            <option value="KRW-LINK">🔗 체인링크 (LINK)</option>
+          </optgroup>
+          <optgroup label="🐶 밈코인 (Meme)">
+            <option value="KRW-DOGE">🐶 도지코인 (DOGE)</option>
+            <option value="KRW-SHIB">🐕 시바이누 (SHIB)</option>
+          </optgroup>
         </select>
 
         <button onclick="runBacktestModal()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-3 py-1.5 rounded-lg transition shadow cursor-pointer">
-          📊 60일 백테스트
+          📊 60일 백테스트 검증
         </button>
         <button onclick="resetAllAccounts()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition cursor-pointer">
           초기화
         </button>
         <div class="text-right pl-3 border-l border-slate-800">
-          <div id="coin-label" class="text-[11px] text-slate-400">BTC 현재가</div>
+          <div id="coin-label" class="text-[11px] text-slate-400">BTC/KRW 현재가</div>
           <div id="current-price" class="text-sm md:text-base font-mono font-bold text-emerald-400">조회중...</div>
         </div>
       </div>
@@ -62,7 +80,7 @@
       <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
         <div class="text-xs text-slate-400 mb-1">체결된 거래 건수</div>
         <div id="total-trade-count" class="text-lg md:text-xl font-bold font-mono text-cyan-400">0회</div>
-        <div class="text-xs text-slate-500 mt-1">업비트 수수료 0.05% 반영</div>
+        <div class="text-xs text-slate-500 mt-1">업비트 수수료 0.05% 정밀 반영</div>
       </div>
       <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
         <div class="text-xs text-slate-400 mb-1">최근 데이터 갱신</div>
@@ -75,7 +93,7 @@
     <div>
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-base md:text-lg font-bold text-white flex items-center gap-2">
-          <span>전략별 실시간 수익률 및 가상매매 시그널</span>
+          <span>개선된 3대 실전 퀀트 전략 실시간 모니터링</span>
         </h2>
         <span class="text-xs text-slate-500">※ 하단 테스트 버튼으로 수동 가상 체결 즉시 확인 가능</span>
       </div>
@@ -119,26 +137,38 @@
     </div>
   </main>
 
-  <!-- 백테스트 모달 -->
-  <div id="backtest-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-4">
+  <!-- 백테스트 모달 (단일 코인 + 전종목 랭킹 탭 지원) -->
+  <div id="backtest-modal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <span>📊 최근 60일 과거 캔들 백테스트 검증 결과</span>
-        </h3>
-        <button onclick="closeBacktestModal()" class="text-slate-400 hover:text-white text-xl">&times;</button>
+        <div class="flex items-center gap-3">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>📊 60일 전수 백테스트 검증 센터</span>
+          </h3>
+          <!-- 탭 버튼 -->
+          <div class="flex bg-slate-800 p-0.5 rounded-lg text-xs">
+            <button id="tab-single" onclick="switchBacktestTab('single')" class="px-3 py-1 rounded-md font-semibold bg-indigo-600 text-white transition">현재 코인 정밀 분석</button>
+            <button id="tab-ranking" onclick="switchBacktestTab('ranking')" class="px-3 py-1 rounded-md font-semibold text-slate-400 hover:text-white transition">전 종목 랭킹 비교</button>
+          </div>
+        </div>
+        <button onclick="closeBacktestModal()" class="text-slate-400 hover:text-white text-xl cursor-pointer">&times;</button>
       </div>
-      <div id="backtest-content" class="text-sm text-slate-300">
-        <div class="py-8 text-center text-slate-400">과거 캔들 데이터 수집 및 시뮬레이션 계산 중...</div>
+
+      <div id="backtest-content" class="text-sm text-slate-300 min-h-[240px]">
+        <div class="py-12 text-center text-slate-400">데이터 수집 및 시뮬레이션 계산 중...</div>
       </div>
     </div>
   </div>
 
   <script>
+    let currentMarket = 'KRW-BTC';
+    let currentBacktestTab = 'single';
+
     async function fetchStatus() {
       try {
         const res = await fetch('/api/status');
         const data = await res.json();
+        currentMarket = data.market;
         renderDashboard(data);
       } catch (err) {
         console.error('데이터 갱신 실패:', err);
@@ -209,18 +239,40 @@
       fetchStatus();
     }
 
+    function switchBacktestTab(tab) {
+      currentBacktestTab = tab;
+      const tabSingle = document.getElementById('tab-single');
+      const tabRanking = document.getElementById('tab-ranking');
+      if (tab === 'single') {
+        tabSingle.className = 'px-3 py-1 rounded-md font-semibold bg-indigo-600 text-white transition';
+        tabRanking.className = 'px-3 py-1 rounded-md font-semibold text-slate-400 hover:text-white transition';
+        loadSingleBacktest();
+      } else {
+        tabRanking.className = 'px-3 py-1 rounded-md font-semibold bg-indigo-600 text-white transition';
+        tabSingle.className = 'px-3 py-1 rounded-md font-semibold text-slate-400 hover:text-white transition';
+        loadRankingBacktest();
+      }
+    }
+
     async function runBacktestModal() {
       const modal = document.getElementById('backtest-modal');
-      const content = document.getElementById('backtest-content');
       modal.classList.remove('hidden');
-      content.innerHTML = '<div class="py-12 text-center text-slate-400 animate-pulse">업비트 60일 캔들 데이터를 불러와 3대 전략을 시뮬레이션 중입니다...</div>';
+      switchBacktestTab('single');
+    }
+
+    async function loadSingleBacktest() {
+      const content = document.getElementById('backtest-content');
+      content.innerHTML = `<div class="py-12 text-center text-slate-400 animate-pulse">${currentMarket} 60일 캔들 1,000개 전수 데이터를 수집하여 3대 전략을 정밀 시뮬레이션 중입니다...</div>`;
 
       try {
-        const res = await fetch('/api/backtest');
+        const res = await fetch(`/api/backtest?market=${currentMarket}`);
         const data = await res.json();
         if (!data.success) throw new Error(data.error);
 
         content.innerHTML = `
+          <div class="mb-3 flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-mono">대상 종목: <strong class="text-white">${data.market}</strong> (최근 60일간 실전 수수료 0.05% 차감 후 순수익)</span>
+          </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs font-mono">
               <thead>
@@ -245,18 +297,71 @@
                     </td>
                     <td class="py-3 text-right text-slate-400">${r.maxDrawdown.toFixed(2)}%</td>
                     <td class="py-3 text-right text-cyan-400">${r.totalTrades}회</td>
-                    <td class="py-3 text-right">${r.winRate.toFixed(1)}%</td>
+                    <td class="py-3 text-right font-bold text-emerald-400">${r.winRate.toFixed(1)}%</td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>
           </div>
-          <div class="mt-4 pt-4 border-t border-slate-800 text-xs text-slate-400">
-            * 60일 동안의 업비트 실제 비트코인 일봉/60분봉 데이터를 기준으로 슬리피지 및 0.05% 수수료를 차감한 실전 백테스트 결과입니다.
+          <div class="mt-4 pt-3 border-t border-slate-800 text-xs text-slate-400">
+            * 단순 캔들 조회가 아닌 <strong>실제 1,000개 60분봉 전수 루프</strong>를 통해 슬리피지와 0.05% 거래 수수료를 모두 차감한 정확한 실전 퀀트 백테스트 결과입니다.
           </div>
         `;
       } catch (err) {
         content.innerHTML = `<div class="py-8 text-center text-rose-400">백테스트 실패: ${err.message}</div>`;
+      }
+    }
+
+    async function loadRankingBacktest() {
+      const content = document.getElementById('backtest-content');
+      content.innerHTML = `<div class="py-12 text-center text-slate-400 animate-pulse">업비트 상위 10개 코인(BTC, ETH, XRP, SOL 등)의 60일 백테스트를 일괄 실행하여 수익률 랭킹을 산출 중입니다... (약 5~10초 소요)</div>`;
+
+      try {
+        const res = await fetch('/api/backtest/ranking');
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+
+        content.innerHTML = `
+          <div class="mb-3 text-xs text-slate-400 font-mono">
+            업비트 주요 10개 종목 60일 퀀트 랭킹 (최적 전략 기준 순위)
+          </div>
+          <div class="overflow-x-auto max-h-[380px] overflow-y-auto">
+            <table class="w-full text-left text-xs font-mono">
+              <thead class="sticky top-0 bg-slate-900 border-b border-slate-800 text-slate-400">
+                <tr>
+                  <th class="pb-2">순위</th>
+                  <th class="pb-2">종목</th>
+                  <th class="pb-2">최적 전략</th>
+                  <th class="pb-2 text-right">최고 수익률</th>
+                  <th class="pb-2 text-right">승률</th>
+                  <th class="pb-2 text-right">체결수</th>
+                  <th class="pb-2 text-center">동작</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800">
+                ${data.rankings.map((r, i) => `
+                  <tr class="hover:bg-slate-800/40">
+                    <td class="py-2.5 font-bold ${i === 0 ? 'text-amber-400' : (i < 3 ? 'text-slate-200' : 'text-slate-500')}">#${i + 1}</td>
+                    <td class="py-2.5 font-bold text-white font-sans">${r.name} <span class="text-[11px] text-slate-400 font-mono">(${r.symbol})</span></td>
+                    <td class="py-2.5 text-slate-300 font-sans">${r.bestStrategy}</td>
+                    <td class="py-2.5 text-right font-bold ${r.bestProfitRate >= 0 ? 'text-rose-400' : 'text-blue-400'}">
+                      ${r.bestProfitRate >= 0 ? '+' : ''}${r.bestProfitRate.toFixed(2)}%
+                    </td>
+                    <td class="py-2.5 text-right text-emerald-400 font-bold">${r.bestWinRate.toFixed(1)}%</td>
+                    <td class="py-2.5 text-right text-cyan-400">${r.totalTrades}회</td>
+                    <td class="py-2.5 text-center">
+                      <button onclick="onMarketChange('${r.market}'); closeBacktestModal();" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-slate-200 px-2 py-0.5 rounded border border-slate-700 cursor-pointer">
+                        선택
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } catch (err) {
+        content.innerHTML = `<div class="py-8 text-center text-rose-400">랭킹 조회 실패: ${err.message}</div>`;
       }
     }
 
@@ -336,7 +441,7 @@
                 </div>
                 <div class="flex justify-between">
                   <span class="text-slate-400">청산 승률:</span>
-                  <span class="text-cyan-400">${s.summary.winRate.toFixed(1)}% (${s.summary.sellTrades}회 청산)</span>
+                  <span class="text-emerald-400 font-bold">${s.summary.winRate.toFixed(1)}% (${s.summary.sellTrades}회 청산)</span>
                 </div>
               </div>
             </div>
