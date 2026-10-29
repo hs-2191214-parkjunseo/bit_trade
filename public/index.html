@@ -69,8 +69,8 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
       <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
         <div class="text-xs text-slate-400 mb-1">총 운용 가상원금</div>
-        <div class="text-lg md:text-xl font-bold font-mono text-white">3,000,000원</div>
-        <div class="text-xs text-slate-500 mt-1">전략당 각 100만 원</div>
+        <div class="text-lg md:text-xl font-bold font-mono text-white">6,000,000원</div>
+        <div class="text-xs text-slate-500 mt-1">6개 전략당 각 100만 원</div>
       </div>
       <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-4">
         <div class="text-xs text-slate-400 mb-1">합산 평가금액</div>
@@ -89,15 +89,15 @@
       </div>
     </div>
 
-    <!-- 3가지 전략 카드 그리드 -->
+    <!-- 6가지 전략 카드 그리드 -->
     <div>
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-base md:text-lg font-bold text-white flex items-center gap-2">
-          <span>개선된 3대 실전 퀀트 전략 실시간 모니터링</span>
+          <span>개선된 6대 실전 퀀트 전략 실시간 모니터링 (3대 정석 + 3대 독창적 알파)</span>
         </h2>
         <span class="text-xs text-slate-500">※ 하단 테스트 버튼으로 수동 가상 체결 즉시 확인 가능</span>
       </div>
-      <div id="strategies-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div id="strategies-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- 렌더링 영역 -->
       </div>
     </div>
@@ -262,7 +262,7 @@
 
     async function loadSingleBacktest() {
       const content = document.getElementById('backtest-content');
-      content.innerHTML = `<div class="py-12 text-center text-slate-400 animate-pulse">${currentMarket} 60일 캔들 1,000개 전수 데이터를 수집하여 3대 전략을 정밀 시뮬레이션 중입니다...</div>`;
+      content.innerHTML = `<div class="py-12 text-center text-slate-400 animate-pulse">${currentMarket} 60일 캔들 1,000개 전수 데이터를 수집하여 6대 전략을 정밀 시뮬레이션 중입니다...</div>`;
 
       try {
         const res = await fetch(`/api/backtest?market=${currentMarket}`);

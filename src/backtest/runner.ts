@@ -21,7 +21,7 @@ async function main() {
     );
   } else {
     console.log(`=======================================================`);
-    console.log(`🚀 [최적화 3대 퀀트 전략 백테스팅] 대상: ${arg}`);
+    console.log(`🚀 [개선된 6대 퀀트 전략 백테스팅] 대상: ${arg}`);
     console.log(`=======================================================\n`);
 
     const results = await executeBacktest(arg, 60);

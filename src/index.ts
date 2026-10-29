@@ -12,7 +12,7 @@ async function main() {
   console.log(`=======================================================`);
   console.log(`🤖 업비트 모의투자 자동매매 봇 & 대시보드 서버 기동`);
   console.log(`   - 대상 코인: ${TARGET_MARKET}`);
-  console.log(`   - 전략당 가상 원금: ${INITIAL_SEED.toLocaleString()}원 (총 3개 전략)`);
+  console.log(`   - 전략당 가상 원금: ${INITIAL_SEED.toLocaleString()}원 (총 6개 전략)`);
   console.log(`   - 서버 포트: ${PORT}`);
   console.log(`=======================================================`);
 

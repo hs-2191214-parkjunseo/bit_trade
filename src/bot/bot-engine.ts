@@ -4,6 +4,9 @@ import { IStrategy, StrategyContext } from '../types/strategy.js';
 import { VolatilityBreakoutStrategy } from '../strategies/volatility-breakout.strategy.js';
 import { GoldenCrossRsiStrategy } from '../strategies/golden-cross-rsi.strategy.js';
 import { SmartDcaStrategy } from '../strategies/smart-dca.strategy.js';
+import { VolumeSpikeStrategy } from '../strategies/volume-spike.strategy.js';
+import { VolatilitySqueezeStrategy } from '../strategies/volatility-squeeze.strategy.js';
+import { LiquiditySweepStrategy } from '../strategies/liquidity-sweep.strategy.js';
 import { Candle, TickerData } from '../types/market.js';
 
 export interface StrategyInstance {
@@ -29,7 +32,7 @@ export class BotEngine {
     this.market = market;
     this.coinSymbol = market.replace('KRW-', '');
 
-    // 3가지 최적화 전략 인스턴스 초기화
+    // 6가지 전략 인스턴스 초기화 (기존 3종 + 독창적 신규 3종)
     this.instances = [
       {
         id: 'strat_volatility',
@@ -49,6 +52,27 @@ export class BotEngine {
         id: 'strat_dca',
         strategy: new SmartDcaStrategy(),
         exchange: new PaperExchange('볼린저 하단 반등 DCA', initialSeedPerStrategy, this.coinSymbol),
+        lastSignalReason: '대기 중',
+        lastEvaluatedAt: '',
+      },
+      {
+        id: 'strat_vol_spike',
+        strategy: new VolumeSpikeStrategy(2.5, 0.025, 0.015),
+        exchange: new PaperExchange('세력 거래량 폭발', initialSeedPerStrategy, this.coinSymbol),
+        lastSignalReason: '대기 중',
+        lastEvaluatedAt: '',
+      },
+      {
+        id: 'strat_squeeze',
+        strategy: new VolatilitySqueezeStrategy(0.03, 0.018),
+        exchange: new PaperExchange('변동성 스퀴즈 폭발', initialSeedPerStrategy, this.coinSymbol),
+        lastSignalReason: '대기 중',
+        lastEvaluatedAt: '',
+      },
+      {
+        id: 'strat_liquidity',
+        strategy: new LiquiditySweepStrategy(20, 0.022, 0.012),
+        exchange: new PaperExchange('유동성 사냥 반전', initialSeedPerStrategy, this.coinSymbol),
         lastSignalReason: '대기 중',
         lastEvaluatedAt: '',
       },

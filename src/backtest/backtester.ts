@@ -3,7 +3,10 @@ import { PaperExchange } from '../exchange/paper.exchange.js';
 import { VolatilityBreakoutStrategy } from '../strategies/volatility-breakout.strategy.js';
 import { GoldenCrossRsiStrategy } from '../strategies/golden-cross-rsi.strategy.js';
 import { SmartDcaStrategy } from '../strategies/smart-dca.strategy.js';
-import { StrategyContext } from '../types/strategy.js';
+import { VolumeSpikeStrategy } from '../strategies/volume-spike.strategy.js';
+import { VolatilitySqueezeStrategy } from '../strategies/volatility-squeeze.strategy.js';
+import { LiquiditySweepStrategy } from '../strategies/liquidity-sweep.strategy.js';
+import { StrategyContext, IStrategy } from '../types/strategy.js';
 import { SUPPORTED_MARKETS } from '../config/markets.js';
 
 export async function executeBacktest(market: string = 'KRW-BTC', days: number = 60) {
@@ -34,9 +37,8 @@ export async function executeBacktest(market: string = 'KRW-BTC', days: number =
 
     const signal = await volStrategy.evaluate(ctx);
     if (signal.action === 'BUY' && signal.amountKrw && krwBal >= 5000) {
-      const entryPrice = candle.trade_price;
       await volExchange.createOrder(
-        { market, side: 'bid', ord_type: 'price', price: signal.amountKrw, currentPrice: entryPrice } as any,
+        { market, side: 'bid', ord_type: 'price', price: signal.amountKrw, currentPrice: candle.trade_price } as any,
         signal.reason
       );
     } else if (signal.action === 'SELL' && signal.volume && coinBal.balance > 0.000001) {
@@ -47,75 +49,70 @@ export async function executeBacktest(market: string = 'KRW-BTC', days: number =
     }
   }
 
-  // 2. 극단 과매도 V자 반등 (60분봉 1000개 전수 시뮬레이션)
-  const rsiExchange = new PaperExchange('극단 과매도 V자 반등', initialKrw, coinSymbol);
-  const rsiStrategy = new GoldenCrossRsiStrategy(14, 0.018, 0.018);
+  // 60분봉 기반 5대 전략 공통 시뮬레이션
+  const minuteStrategies: { name: string; strategy: IStrategy; exchange: PaperExchange }[] = [
+    {
+      name: '극단 과매도 V자 반등',
+      strategy: new GoldenCrossRsiStrategy(14, 0.018, 0.018),
+      exchange: new PaperExchange('극단 과매도 V자 반등', initialKrw, coinSymbol),
+    },
+    {
+      name: '볼린저 하단 반등 DCA',
+      strategy: new SmartDcaStrategy(),
+      exchange: new PaperExchange('볼린저 하단 반등 DCA', initialKrw, coinSymbol),
+    },
+    {
+      name: '세력 거래량 폭발',
+      strategy: new VolumeSpikeStrategy(2.5, 0.025, 0.015),
+      exchange: new PaperExchange('세력 거래량 폭발', initialKrw, coinSymbol),
+    },
+    {
+      name: '변동성 스퀴즈 폭발',
+      strategy: new VolatilitySqueezeStrategy(0.03, 0.018),
+      exchange: new PaperExchange('변동성 스퀴즈 폭발', initialKrw, coinSymbol),
+    },
+    {
+      name: '유동성 사냥 반전',
+      strategy: new LiquiditySweepStrategy(20, 0.022, 0.012),
+      exchange: new PaperExchange('유동성 사냥 반전', initialKrw, coinSymbol),
+    },
+  ];
 
   for (let i = 25; i < minuteCandles.length; i++) {
     const windowCandles = minuteCandles.slice(0, i + 1);
     const candle = windowCandles[windowCandles.length - 1];
-    const coinBal = await rsiExchange.getBalance(coinSymbol);
-    const krwBal = (await rsiExchange.getBalance('KRW')).balance;
 
-    const ctx: StrategyContext = {
-      market,
-      currentPrice: candle.trade_price,
-      krwBalance: krwBal,
-      coinBalance: coinBal,
-      candles: windowCandles,
-    };
+    for (const item of minuteStrategies) {
+      const coinBal = await item.exchange.getBalance(coinSymbol);
+      const krwBal = (await item.exchange.getBalance('KRW')).balance;
 
-    const signal = await rsiStrategy.evaluate(ctx);
-    if (signal.action === 'BUY' && signal.amountKrw && krwBal >= 5000) {
-      await rsiExchange.createOrder(
-        { market, side: 'bid', ord_type: 'price', price: signal.amountKrw, currentPrice: candle.trade_price } as any,
-        signal.reason
-      );
-    } else if (signal.action === 'SELL' && signal.volume && coinBal.balance > 0.000001) {
-      await rsiExchange.createOrder(
-        { market, side: 'ask', ord_type: 'market', volume: coinBal.balance, currentPrice: candle.trade_price } as any,
-        signal.reason
-      );
-    }
-  }
+      const ctx: StrategyContext = {
+        market,
+        currentPrice: candle.trade_price,
+        krwBalance: krwBal,
+        coinBalance: coinBal,
+        candles: windowCandles,
+      };
 
-  // 3. 볼린저 하단 반등 DCA (60분봉 1000개 전수 시뮬레이션)
-  const dcaExchange = new PaperExchange('볼린저 하단 반등 DCA', initialKrw, coinSymbol);
-  const dcaStrategy = new SmartDcaStrategy();
-
-  for (let i = 25; i < minuteCandles.length; i++) {
-    const windowCandles = minuteCandles.slice(0, i + 1);
-    const candle = windowCandles[windowCandles.length - 1];
-    const coinBal = await dcaExchange.getBalance(coinSymbol);
-    const krwBal = (await dcaExchange.getBalance('KRW')).balance;
-
-    const ctx: StrategyContext = {
-      market,
-      currentPrice: candle.trade_price,
-      krwBalance: krwBal,
-      coinBalance: coinBal,
-      candles: windowCandles,
-    };
-
-    const signal = await dcaStrategy.evaluate(ctx);
-    if (signal.action === 'BUY' && signal.amountKrw && krwBal >= 5000) {
-      await dcaExchange.createOrder(
-        { market, side: 'bid', ord_type: 'price', price: signal.amountKrw, currentPrice: candle.trade_price } as any,
-        signal.reason
-      );
-    } else if (signal.action === 'SELL' && signal.volume && coinBal.balance > 0.000001) {
-      await dcaExchange.createOrder(
-        { market, side: 'ask', ord_type: 'market', volume: coinBal.balance, currentPrice: candle.trade_price } as any,
-        signal.reason
-      );
+      const signal = await item.strategy.evaluate(ctx);
+      if (signal.action === 'BUY' && signal.amountKrw && krwBal >= 5000) {
+        await item.exchange.createOrder(
+          { market, side: 'bid', ord_type: 'price', price: signal.amountKrw, currentPrice: candle.trade_price } as any,
+          signal.reason
+        );
+      } else if (signal.action === 'SELL' && signal.volume && coinBal.balance > 0.000001) {
+        await item.exchange.createOrder(
+          { market, side: 'ask', ord_type: 'market', volume: coinBal.balance, currentPrice: candle.trade_price } as any,
+          signal.reason
+        );
+      }
     }
   }
 
   const lastPrice = minuteCandles[minuteCandles.length - 1].trade_price;
   return [
     volExchange.getSummary(lastPrice),
-    rsiExchange.getSummary(lastPrice),
-    dcaExchange.getSummary(lastPrice),
+    ...minuteStrategies.map((s) => s.exchange.getSummary(lastPrice)),
   ];
 }
 
