@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { BotEngine } from '../bot/bot-engine.js';
+import { executeBacktest } from '../backtest/backtester.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,8 +29,39 @@ export function createWebServer(botEngine: BotEngine) {
     }
   });
 
-  // 루트 접속 시 대시보드 서빙
-  app.get('*', (_req, res) => {
+  // 백테스트 실행 API
+  app.get('/api/backtest', async (_req, res) => {
+    try {
+      const results = await executeBacktest(botEngine.market, 60);
+      res.json({ success: true, results });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 수동 가상 테스트 주문 API
+  app.post('/api/trade/manual', async (req, res) => {
+    try {
+      const { strategyId, side, amountOrVolume } = req.body;
+      const order = await botEngine.manualTrade(strategyId, side, parseFloat(amountOrVolume));
+      res.json({ success: true, order });
+    } catch (err: any) {
+      res.status(400).json({ success: false, error: err.message });
+    }
+  });
+
+  // 가상 계좌 전체 초기화 API
+  app.post('/api/reset', (_req, res) => {
+    try {
+      botEngine.resetAll();
+      res.json({ success: true, message: '모든 가상 계좌가 초기화되었습니다.' });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 기타 모든 경로는 대시보드 SPA 서빙
+  app.use((_req, res) => {
     res.sendFile(path.join(publicPath, 'index.html'));
   });
 

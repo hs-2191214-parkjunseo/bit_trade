@@ -143,6 +143,45 @@ export class BotEngine {
     }
   }
 
+  async manualTrade(strategyId: string, side: 'bid' | 'ask', amountOrVolume: number) {
+    const inst = this.instances.find((i) => i.id === strategyId);
+    if (!inst) throw new Error(`전략 ID를 찾을 수 없음: ${strategyId}`);
+
+    const currentPrice = this.lastTicker ? this.lastTicker.trade_price : await upbitClient.getCurrentPrice(this.market);
+
+    if (side === 'bid') {
+      return await inst.exchange.createOrder(
+        {
+          market: this.market,
+          side: 'bid',
+          ord_type: 'price',
+          price: amountOrVolume,
+          currentPrice,
+        } as any,
+        '사용자 수동 테스트 매수'
+      );
+    } else {
+      return await inst.exchange.createOrder(
+        {
+          market: this.market,
+          side: 'ask',
+          ord_type: 'market',
+          volume: amountOrVolume,
+          currentPrice,
+        } as any,
+        '사용자 수동 테스트 매도'
+      );
+    }
+  }
+
+  resetAll(initialSeed: number = 1000000) {
+    for (const inst of this.instances) {
+      inst.exchange = new PaperExchange(inst.strategy.name, initialSeed, this.coinSymbol);
+      inst.lastSignalReason = '초기화 완료 (대기 중)';
+    }
+    console.log('[BotEngine] 모든 가상 계좌 초기화 완료');
+  }
+
   getStatus() {
     const currentPrice = this.lastTicker ? this.lastTicker.trade_price : 0;
     return {
