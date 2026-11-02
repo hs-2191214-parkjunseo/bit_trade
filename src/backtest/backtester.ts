@@ -63,17 +63,17 @@ export async function executeBacktest(market: string = 'KRW-BTC', days: number =
     },
     {
       name: '세력 거래량 폭발',
-      strategy: new VolumeSpikeStrategy(2.5, 0.025, 0.015),
+      strategy: new VolumeSpikeStrategy(0.028, 0.022),
       exchange: new PaperExchange('세력 거래량 폭발', initialKrw, coinSymbol),
     },
     {
       name: '변동성 스퀴즈 폭발',
-      strategy: new VolatilitySqueezeStrategy(0.03, 0.018),
+      strategy: new VolatilitySqueezeStrategy(0.032, 0.022),
       exchange: new PaperExchange('변동성 스퀴즈 폭발', initialKrw, coinSymbol),
     },
     {
       name: '유동성 사냥 반전',
-      strategy: new LiquiditySweepStrategy(20, 0.022, 0.012),
+      strategy: new LiquiditySweepStrategy(20, 0.018, 0.025),
       exchange: new PaperExchange('유동성 사냥 반전', initialKrw, coinSymbol),
     },
   ];
